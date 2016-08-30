@@ -1,0 +1,641 @@
+\section{Graphs}
+
+
+\subsection{Heap}
+\begin{verbatim}
+#define LEFT(i) (2*(i+1)-1)
+#define RIGHT(i) (2*(i+1))
+#define PARENT(i) (((i)+1)/2-1)
+
+int *min_heap;
+long int *keys;
+int *heap_place;
+int heap_size=0;
+
+#define update_place(i) heap_place[min_heap[(i)]]=(i)
+
+void init_heap(int nelems) {
+    int i;
+    min_heap=(int*)malloc(sizeof(int)*nelems);
+    keys=(long int*)malloc(sizeof(long int)*nelems);
+    heap_place=(int*)malloc(sizeof(int)*nelems);
+    heap_size=nelems;
+    for(i=0;i<nelems;i++) {
+        min_heap[i]=i;
+        heap_place[i]=i;
+        keys[i]=INF;
+    }
+}
+
+void heap_min_heapify(int i) {
+    int smallest;
+    int temp;
+    int l = LEFT(i);
+    int r = RIGHT(i);
+
+    if(l<heap_size && keys[min_heap[l]]<keys[min_heap[i]])
+        smallest=l;
+    else smallest=i;
+    if(r<heap_size &&
+            keys[min_heap[r]]<keys[min_heap[smallest]])
+        smallest=r;
+
+    if(smallest!=i) {
+        temp=min_heap[i];
+        min_heap[i]=min_heap[smallest];
+        min_heap[smallest]=temp;
+        update_place(smallest);
+        update_place(i);
+        heap_min_heapify(smallest);
+    }
+}
+
+int heap_extract_min() {
+    int res;
+    if (heap_size<1) return -1;
+    res=min_heap[0];
+    heap_size--;
+    min_heap[0]=min_heap[heap_size];
+    update_place(0);
+    heap_min_heapify(0);
+    return res;
+}
+
+void heap_decrease_key(int elem, long int key) {
+    int temp;
+    int i=heap_place[elem];
+
+    keys[min_heap[i]]=key;
+
+    while (i>0 && keys[min_heap[PARENT(i)]] >
+            keys[min_heap[i]]) {
+        temp=min_heap[i];
+        min_heap[i]=min_heap[PARENT(i)];
+        min_heap[PARENT(i)]=temp;
+        update_place(i);
+        update_place(PARENT(i));
+        i=PARENT(i);
+    }
+}
+
+\end{verbatim}
+
+\subsection{Find an Eulerian Path}
+\begin{verbatim}
+stack<int> s;
+vector<list<int> >adj;
+
+void remove_edge(int u, int v) {
+   for (list<int>::iterator it=adj[u].begin();
+              it != adj[u].end(); it++) {
+      if (*it == v) {
+         it = adj[u].erase(it);
+         return;
+      }
+   }
+}
+
+int path(int v) {
+   int w;
+   for (;adj[v].size();v = w) {
+      s.push(v);
+      list<int>::iterator it = adj[v].begin();
+      w = *it;;
+      remove_edge(v,w);
+      remove_edge(w,v);
+      edges--;
+   }
+   return v;
+}
+
+//u - source, v-destiny
+int eulerian_path(int u, int v) {
+   printf("%d\n", v);
+   while (path(u) == u && !s.empty()) {
+	    printf("-%d", u = s.top());
+	    s.pop();
+   }
+    return edges == 0;
+}
+\end{verbatim}
+
+\subsection{Check if there is an Hamiltonian Path}
+$O(n^22^n)$
+\begin{verbatim}
+//initially:
+// u - dest
+// seen = 1 << u
+bool memo[20][1 << 20];
+void hpath( int u, int seen ) {
+   if ( memo[u][seen] ) return;
+   memo[u][seen] = true;
+    
+   if( u == t ) { /* check that seen == (1<<n)­1 (seen every vertex) */ }
+   else {
+      for ( int v = 0; v < n; v++ ) 
+         if ( !( seen & ( 1 << v ) ) && graph[u][v] )
+            hpath( v, seen | ( 1 << v ) );
+    }
+}
+\end{verbatim}
+
+\subsection{Breadth First Search}
+\begin{verbatim}
+bool adj[N][N];
+int colour[N], d[N],p[N];
+void bfs() {
+   queue<int> q;
+   int i, source = 0;
+   
+   for (i = 0; i < N; i++){
+      d[i] = INF;
+      p[i] = -1;
+      colour[i] = WHITE;
+   }
+   
+   d[source] = 0;
+   colour[source] = GRAY;
+   q.push(source);
+   while (!q.empty()) {
+      int u = q.front();
+      q.pop();
+      for (int v = 0;v < N; v++){
+         if(colour[v] == WHITE && adj[u][v]) {
+            colour[v] = GRAY;
+            d[v] = d[u]+1;
+            p[v] = u;
+            q.push(v);
+         }
+      }
+      colour[u] = BLACK;
+   }
+}
+\end{verbatim}
+
+\subsection{DFS/TopSort}
+$O(V+E)$
+
+\textbf{Recursive:}
+
+\begin{verbatim}
+void dfs(int u) {
+   colour[u] = GRAY;
+   for (int v = 0;v < N; v++) {
+      if (colour[v] == WHITE && adj[u][v]) {
+         p[v] = u;
+         dfs(v);
+      }
+   }
+   colour[u] = BLACK;
+   //put node in front of a list if topsort
+}
+\end{verbatim}
+
+\textbf{Iterative:}
+
+\begin{verbatim}
+typedef enum {WHITE, GRAY, BLACK} color_t;
+vector<color_t> color;
+// SCC: vector<int> close_time;
+
+stack<int> dfs;
+color = vector<color_t>(N, WHITE);
+for(int i=0; i<N; i++){
+  if(color[i]!=WHITE) continue;
+  dfs.push(i);
+// SCC2: for(int i=N-1; i>=0; i--){
+// SCC2: if(color[close_time[i]]!=WHITE) continue;
+// SCC2: dfs.push(close_time[i]);
+  while(!dfs.empty()){
+    int u = dfs.top();
+    switch(color[u]){
+    case WHITE:
+      color[u] = GRAY;
+      for( v in adj[u] ){
+// SCC2: for( v in adj_t[u] ){
+        if(color[v] == WHITE){
+          dfs.push(v);
+        }
+      }
+      break;
+    case GRAY:
+      color[u]=BLACK;
+      dfs.pop();
+// put node in front of a list if topsort
+// SCC1: close_time.push_back(u);
+      break;
+    case BLACK:
+      dfs.pop();
+      break;
+    }
+  }
+}
+\end{verbatim}
+
+\textbf{Maximum Spanning Tree:}
+
+Negate all the edge weights and determine the minimum spanning tree.
+
+\textbf{Minimum Product Spanning Tree:}
+
+Replace all the edge weights with their logarithm
+
+\textbf{Strongly Connected Components:}
+
+DFS1: Save closing times of all vertexes.
+
+Compute adj\_t.
+
+DFS2: Reverse order of closing times. In adj\_t.
+
+Each resulting tree is a SCC.
+
+\subsection{Prim's Algorithm}
+\begin{verbatim}
+double Prim(int start,int nvert) {
+   bool in[N];
+   double dist[N];
+   int p[N], i, v;
+   
+   for(i = 0; i < nvert; i++){
+      in[i] = false;
+      dist[i] = INT_MAX;
+      p[i] = -1;
+   }
+   
+   dist[start] = 0;
+   v = start;
+   while (!in[v]) {
+      in[v] = true;
+      for(i = 0;i < nvert; i++){
+         if (adj[v][i] && !in[i]){
+            if (dist[i] > adj[v][i]){
+               dist[i] = adj[v][i];
+               p[i] = v;
+            }
+         }
+      }
+      
+      double d = FLT_MAX;
+      for (i = 0;i < nvert; i++) {
+         if (!in[i] && d > dist[i]) {
+            v = i;
+            d = dist[i];
+         }
+      }
+   }
+   double res = 0;
+   for(i = 0;i < nvert; i++)
+      res += dist[i];
+   return res;
+}
+\end{verbatim}
+
+\subsection{Dijkstra}
+\begin{verbatim}
+int dijkstra(int source, int dest,
+             int nvert,int d[],int p[]) {
+    bool in[N];
+    int i, u, v;
+
+    for (i = 0;i < nvert; i++) {
+       in[i] = false;
+       d[i] = INF;
+       p[i] = -1;
+    }
+    d[source] = 0;
+    u = source;
+    while (!in[u]){
+       in[u] = true;
+       for (v = 0;v < nvert; v++) {
+          if(adj[u][v] && d[v]>d[u]+adj[u][v]) {
+             p[v]=u;
+             d[v]=d[u]+adj[u][v];
+          }
+       }
+       
+       int dist=INF;
+       for(i=0;i<nvert;i++) {
+          if(!in[i] && d[i]<dist) {
+             u=i;
+             dist=d[i];
+          }
+       }
+    }
+    return d[dest];
+}
+\end{verbatim}
+
+\subsection{Kth Shortest Paths}
+$O(Km)$
+\begin{verbatim}
+/*
+ * u - source node
+ * p - predecessor vector
+ * h - vector of transformation
+ * v - result vector
+ */
+ #define vvi vector<vector<int> >
+void path(int u, const vector<int> &p,
+          const vector<int> &h, vector<int> &v) {
+   if (u != -1) {
+      path(p[u], p, h, v);
+      v.push_back(h[u]);
+   }
+}
+
+vvi dijkstra(int source, int dest, int K) {
+   vector<int> count(SIZE), d(10000),
+                p(10000), h(10000), X;
+   vvi res;
+    
+   for (int i = 0; i < N; i++)
+	    p[i] = -1;
+   int elm = 1;
+   h[elm] = source;
+   d[elm] = 0;
+   X.push_back(elm);
+
+   while (count[dest] < K && !X.empty()) {
+	    int ind = 0;
+	    for (unsigned int i = 1; i < X.size(); i++) {
+	       if (d[X[i]] < d[X[ind]])
+		        ind = i;
+	    }
+	    int k = X[ind];
+	    X.erase(X.begin() + ind);
+	    int i = h[k];
+
+	    count[i]++;
+	    if (i == dest) {
+	       vector<int> v;
+	       path(k, p, h, v);
+	       res.push_back(v);
+	    }
+
+	    if (count[i] <= K) {
+	       for (int j = 0; j < SIZE; j++) {
+		        if (adj[i][j]) {
+		           elm++;
+		           d[elm] = d[k] + adj[i][j];
+		           p[elm] = k;
+		           h[elm] = j;
+		           X.push_back(elm);
+		        }
+	       }
+	    }
+   }
+   return res;
+}
+\end{verbatim}
+
+\subsection{Floyd-Warshall} 
+$O(n^3)$;
+
+Tem que ser tipo INT\_MAX/4 para inicializar, para evitar overflows.
+
+\begin{verbatim}
+void floyd(int adj[NVERT][NVERT]){
+   int i, j, k, through_k;
+   for (k = 1;k <= NVERT; k++){
+      for (i = 1;i <= NVERT; i++){
+         for (j = 1;j <= NVERT; j++){
+            through_k = adj[i][k] + adj[k][j];
+            if (through_k < adj[i][j])
+               adj[i][j] = through_k;
+         }
+      }
+   }
+}
+\end{verbatim}
+
+\subsection{Bellman-Ford}
+\begin{verbatim}
+typedef struct {
+   int source;
+   int dest;
+   int weight;
+} Edge;
+
+void BellmanFord(Edge edges[], int edgecount,
+                  int nodecount, int source)
+{
+   int *distance = 
+       (int*) malloc(nodecount * sizeof(*distance));
+   int i, j;
+   for (i=0; i < nodecount; i++)
+     distance[i] = INFINITY;
+
+   /* The source node distance is set to zero. */
+   distance[source] = 0;
+
+   for (i=0; i < nodecount; i++) {
+      for (j=0; j < edgecount; j++) {
+          if (distance[edges[j].source] != INFINITY) {
+              int new_distance = 
+                   distance[edges[j].source] + 
+                   edges[j].weight;
+                   
+              if ( new_distance < 
+                   distance[edges[j].dest])
+                distance[edges[j].dest] = 
+                                 new_distance;
+          }
+      }
+  }
+
+  for (i=0; i < edgecount; i++) {
+     if ( distance[edges[i].dest] > 
+        distance[edges[i].source] + 
+                 edges[i].weight) {
+         puts("Negative edge weight
+                cycles detected!");
+         free(distance);
+         return;
+     }
+ }
+
+  for (i=0; i < nodecount; i++) {
+      printf("The shortest distance between 
+                 nodes %d and %d is %d\n",
+          source, i, distance[i]);
+  }
+  free(distance);
+  return;
+}
+\end{verbatim}
+
+\subsection{Detecting Bridges}
+\begin{verbatim}
+int dfs(int u, int p) {
+   colour[u] = 1;
+   dfsNum[u] = num++;
+   int leastAncestor = num;
+   for (int v = 0; v < N; v++) {
+      if (M[u][v] && v!=p) {
+         if (colour[v] == 0) {
+            int rec = dfs(v,u);
+            if (rec > dfsNum[u])
+               cout<<"Bridge: "<<u<<" "<<v<<endl;
+            leastAncestor = min(leastAncestor,rec);
+         }
+         else{
+            leastAncestor = min(leastAncestor,
+                                 dfsNum[v]);
+         }
+      }
+   }
+   colour[u] = 2;
+   return leastAncestor;
+}
+\end{verbatim}
+
+\subsection{Finding a Loop in a Linked List}
+$O(n)$
+\begin{verbatim}
+// Best solution
+function boolean hasLoop(Node startNode){
+   Node slowNode, fastNode1, fastNode2;
+   slowNode = fastNode1 = fastNode2 = startNode;
+   while (slowNode && fastNode1 = fastNode2.next()
+                  && fastNode2 = fastNode1.next()){
+     if (slowNode == fastNode1 ||
+         slowNode == fastNode2)
+           return true;
+     slowNode = slowNode.next();
+   }
+   return false;
+}
+\end{verbatim}
+
+\subsection{Tree diameter}
+
+Pick a root and start a DFS from it which returns both the diameter of the subtree and its maximum height. The diameter is the maximum of (left diameter, right diameter, left height + right height).
+
+\subsection{Equivalência de Estados}
+- Inicialmente todos são candidatos a serem equivalente (equiv[i][j]=true para todo i,j)\\
+- Passar por todos os pares e se um é "win" e outro "lose" então equiv[i][j] = false\\
+- Passar novamente por todos os pares e se a transição por alguma das entradas do alfabeto for dar a estados não equivalentes, então eles também não o podem ser!\\
+- Continuar a fazer isto enquanto houver mudanças no equiv[][], sendo que as "não equivalências" vão-se propagando!\\
+
+\subsection{Union Find}
+\begin{verbatim}
+int Rank[SIZE];
+int P[SIZE];
+
+void create_set(int x) {
+   P[x] = x;
+   Rank[x] = 0;
+}
+
+void merge_sets(int x, int y) {
+   int px = find_set(x);
+   int py = find_set(y);
+   if(Rank[px] > Rank[py])
+      P[py] = px;
+   else P[px] = py;
+   
+   if(Rank[px] == Rank[py])
+      Rank[py]++;
+}
+
+int find_set(int x){
+   if(x != P[px])
+      P[x] = find_set(P[x]);
+   return P[x];
+}
+
+void connected_components(){
+   for each vertex i
+      do create_set(i);
+   
+   for each edge (u,v)
+      if(find_set(u) != find_set(v))
+         merge_sets(u,v);
+}
+
+bool same_conponents(int u,int v){
+   if(find_set(u) == find_set(v))
+      return true;
+   else return false;
+}
+\end{verbatim}
+
+\subsection{Edmonds Karp}
+\begin{verbatim}
+struct edge {
+    int dest;
+    int max_weight;
+    int flow;
+    edge * residual;
+};
+
+int nnodes;
+
+typedef map<int, edge*> node;
+typedef node** graph;
+graph grafo;
+
+void create_edge(int source,int dest, int weight) {
+    if((*grafo[source]).find(dest)==
+            (*grafo[source]).end())
+    {
+        edge* e=(edge*)malloc(sizeof(edge));
+        edge* res=(edge*)malloc(sizeof(edge));
+        e->dest=dest;
+        res->dest=source;
+        e->max_weight=weight;
+        res->max_weight=weight;
+        e->flow=0;
+        res->flow=weight;
+        e->residual=res;
+        res->residual=e;
+        (*grafo[source])[dest]=e;
+        (*grafo[dest])[source]=res;
+        return;
+    }
+
+    edge* e=(*grafo[source])[dest];
+    edge* res=e->residual;
+    e->max_weight+=weight;
+    res->max_weight+=weight;
+    res->flow+=weight;
+}
+
+int update_path(int flowsource, int flowdest) {
+    int flow=INF;
+    int noded=flowdest;
+    while(noded!=flowsource) {
+        int source=p[noded];
+        edge* e=(*grafo[source])[noded];
+        if(flow>e->max_weight-e->flow) {
+            flow=e->max_weight-e->flow;
+        }
+        noded=source;
+    }
+
+    noded=flowdest;
+    while(noded!=flowsource) {
+        int source=p[noded];
+        edge* e=(*grafo[source])[noded];
+        e->flow+=flow;
+        e->residual->flow-=flow;
+        noded=source;
+    }
+    return flow;
+}
+
+int edmonds_karp(int source, int dest) {
+    int res=0;
+    while(1) {
+        bfs(source);
+        //verifica flow<max_weight nos edges
+        if(colour[dest]==WHITE) {
+            return res;
+        }
+        res+=update_path(source,dest);
+    }
+    return res;
+}
+
+\end{verbatim}

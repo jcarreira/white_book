@@ -1,0 +1,33 @@
+\section{C++}
+
+%\subsection{vector}
+
+\subsection{algorithm}
+
+The first iterator with maximum:
+
+\verb!iterator max_element( iterator start, iterator end );!
+
+%\subsection{map}
+
+%\subsection{string}
+
+%\subsection{queue}
+
+\begin{verbatim}
+priority_queue< int, vector<int>,
+                    greater<int> > example;
+
+struct eventComparison {
+  bool operator () (const event * left,
+	             const event * right) {
+    return left->time > right->time;
+  }
+};
+
+priority_queue<event*> pq(eventComparison());
+\end{verbatim}
+
+%\subsection{stack}
+
+%\subsection{list}

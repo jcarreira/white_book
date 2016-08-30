@@ -1,0 +1,264 @@
+\section{Geometrical Algorithms}
+
+\subsection{Dot Product}
+
+\begin{verbatim}
+int dot(int[] A, int[] B, int[] C) {
+   int AB[2], BC[2];
+   AB[0] = B[0]-A[0];
+   AB[1] = B[1]-A[1];
+   BC[0] = C[0]-B[0];
+   BC[1] = C[1]-B[1];
+   int dot = AB[0] * BC[0] + AB[1] * BC[1];
+   return dot;
+}
+\end{verbatim}
+
+\subsection{Cross Product}
+\begin{verbatim}
+int cross(int[] A, int[] B, int[] C) {
+   int AB[2], AC[2];
+   AB[0] = B[0]-A[0];
+   AB[1] = B[1]-A[1];
+   AC[0] = C[0]-A[0];
+   AC[1] = C[1]-A[1];
+   int cross = AB[0] * AC[1] - AB[1] * AC[0];
+   return cross;
+}
+\end{verbatim}
+
+\subsection{Point on segment}
+
+A point is on a segment if its distance to the segment is 0.
+
+\textbf{Given two different points $(x_1,y_1)$ and $(x_2,y_2)$ the values of $A$,$B$, and $C$ for $Ax+By+C=0$ are given by}\\
+$$
+A=y_2-y_1
+$$
+$$
+B=x_1-x_2\\
+$$
+$$
+C=A*x_1+B*y_1\\
+$$
+
+\subsection{Intersection of segments}
+\begin{verbatim}
+double det = A1*B2 - A2*B1
+if (det == 0) {
+   //Lines are parallel
+} else {
+   double x = -(A1*C2 - A2*C1) / det
+   double y = -(B1*C2 - B2*C1) / det
+}
+\end{verbatim}
+
+\subsection{Posição de ponto em relação à recta}
+\begin{verbatim}
+//Input:  three points P0, P1, and P2
+//Return: >0 for P2 left of the line through P0 and P1
+//        = 0 for P2 on the line
+//        < 0 for P2 right of the line
+int isLeft( Point P0, Point P1, Point P2 ) {
+    return ( (P1.x - P0.x) * (P2.y - P0.y)
+            - (P2.x - P0.x) * (P1.y - P0.y) );
+}
+\end{verbatim}
+
+\subsection{Distância entre um ponto e uma recta ou segmento de recta}
+
+If the line is in the form $Ax+By+C=0$:
+$$
+d=\frac{|Ax_0+By_0+C|}{\sqrt{A^2+B^2}}
+$$
+
+\begin{verbatim}
+//Compute the dist. from AB to C
+//if isSegment=strue, AB is a seg., not a line.
+double linePointDist(int[] A, int[] B,
+             int[] C, boolean isSegment) {
+   double dist = cross(A,B,C) / distance(A,B);
+   if (isSegment) {
+      int dot1 = dot(A,B,C);
+      if (dot1 > 0) return distance(B,C);
+      int dot2 = dot(B,A,C);
+      if (dot2 > 0) return distance(A,C);
+   }
+   return abs(dist);
+}
+\end{verbatim}
+
+\subsection{Polygon Area}
+\begin{verbatim}
+int area = 0;
+/*int N = lengthof(p);*/
+
+for (int i = 1; i + 1 < N; i++) {
+   int x1 = p[i][0] - p[0][0];
+   int y1 = p[i][1] - p[0][1];
+   int x2 = p[i+1][0] - p[0][0];
+   int y2 = p[i+1][1] - p[0][1];
+   int cross = x1*y2 - x2*y1;
+   area += cross;
+}
+return fabs(area/2.0);
+\end{verbatim}
+
+\subsection{Convex Hull} 
+\begin{verbatim}
+// Devolve a lista de pontos no convex hull na
+// ordem contrária aos relógios.
+// Nota: o último ponto na lista devolvida é 1 
+// replicação do primeiro
+#include <vector>
+vector<point> ConvexHull(vector<point> P) {
+       int n = P.size(), k = 0;
+       vector<point> H(2*n);
+
+       // Sort points lexicographically
+       sort(P.begin(), P.end());
+
+       // Build lower hull
+       for (int i = 0; i < n; i++) {
+               while (k >= 2 && 
+                      cross(H[k-2], H[k-1], P[i]) <= 0) 
+                  k--;
+               H[k++] = P[i];
+       }
+
+       // Build upper hull
+       for (int i = n-2, t = k+1; i >= 0; i--) {
+               while (k >= t && 
+               cross(H[k-2], H[k-1], P[i]) <= 0)
+                  k--;
+               H[k++] = P[i];
+       }
+
+       H.resize(k);
+       return H;
+}
+\end{verbatim}
+
+\subsection{Closest pair of points}
+\begin{verbatim}
+double delta_m(vp &ql, vp &qr,double delta) {
+   int i,j=0;
+   double dm=delta;
+   for (i=0;i<(int)ql.size();i++) {
+      point p=ql[i];
+      
+      while (j<(int)qr.size() && qr[j].y < p.y-delta)
+         j++;
+      
+      int k=j;
+      while (k<(int)qr.size()
+             && qr[k].y<=p.y+delta) {
+         dm=min(dm,dist(p,qr[k]));
+         k++;
+      }
+   }
+   return dm;
+}
+	    
+
+vp select_candidates(vp &p,int l,int r,
+               double delta,double midx) {
+   vp n;
+   for (int i=l;i<=r;i++) {
+      if (abs(p[i].x-midx)<=delta)
+         n.push_back(p[i]);
+   }
+   return n;
+}
+
+double closest_pair(vp &p,int l,int r) {
+    if (r-l+1<2)return INF;
+    int mid=(l+r)/2;
+    double midx=p[mid].x;
+    double dl=closest_pair(p,l,mid);
+    double dr=closest_pair(p,mid+1,r);
+    double delta=min(dl,dr);
+
+    vp ql,qr;
+    ql=select_candidates(p,l,mid,delta,midx);
+    qr=select_candidates(p,mid+1,r,delta,midx);
+
+    double dm=delta_m(ql,qr,delta);
+
+    vp res;
+    merge(p.begin()+l,p.begin()+mid+1,
+          p.begin()+mid+1,p.begin()+r+1,
+               back_inserter(res),cmp);
+    copy(res.begin(),res.end(),p.begin()+l);
+    return min(dm,min(dr,dm));
+}
+\end{verbatim}
+
+\subsection{Test if point is inside a polygon}
+\begin{verbatim}
+//Input: P = ponto
+//       V[] = vector de n+1 pontos, com V[n]=V[0]
+//Return:  wn = 0 only if P is outside V[]
+int wn_PnPoly( Point P, Point* V, int n ) {
+    int    wn = 0;    // the winding number counter
+
+    // loop through all edges of the polygon
+    for (int i=0; i<n; i++) {
+        if (V[i].y <= P.y) {
+            if (V[i+1].y > P.y)
+                if (isLeft( V[i], V[i+1], P) > 0)
+                    ++wn;
+        }
+        else {
+            if (V[i+1].y <= P.y)
+                if (isLeft( V[i], V[i+1], P) < 0)
+                    --wn;
+        }
+    }
+    return wn;
+}
+\end{verbatim}
+\subsection{Intersection of rectangles}
+\begin{verbatim}
+x1 = y2 = INT_MIN;
+x2 = y1 = INT_MAX;
+
+for (i=0;i<NRECT;i++) { //for all rectangles
+   cin>>ax>>ay>>bx>>by;
+   if (ax>x1)x1=ax;
+   if (ay<y1)y1=ay;
+   if (bx<x2)x2=bx;
+   if (by>y2)y2=by;
+}
+\end{verbatim}
+
+\subsection{Circle from 3 points}
+\begin{verbatim}
+int main() {
+   double ax,ay,bx,by,cx,cy,xres,yres;
+   double xmid,ymid,A1,B1,C1,A2,C2,B2,dist;
+   
+   while (scanf("%lf %lf %lf %lf %lf %lf",
+                    &ax,&ay,&bx,&by,&cx,&cy)==6) {
+      A1 = by - ay;
+      B1 = ax - bx;
+      xmid=min(ax,bx)+(max(ax,bx)-min(ax,bx))/2.0;
+      ymid=min(ay,by)+(max(ay,by)-min(ay,by))/2.0;
+      C1 = -B1 * xmid + A1 * ymid;
+      
+      B2 = bx - cx;
+      A2 = cy - by;
+      xmid=min(bx,cx)+(max(bx,cx)-min(bx,cx))/2.0;
+      ymid=min(by,cy)+(max(by,cy)-min(by,cy))/2.0;
+      C2 = -B2 * xmid + A2 * ymid;
+      //intersection of segments
+      intersection(A1,B1,C1,A2,B2,C2,&xres,&yres);
+      dist = sqrt(pow(xres-bx,2)+pow(yres-by,2));
+      printf("(x %s %.3lf)^2 + (y %s %.3lf)^2 =
+      %.3lf^2\n",xres<0.0?"+":"-",abs(xres),
+               yres<0.0?"+":"-",abs(yres),dist);
+   }
+
+    return 0;
+}
+\end{verbatim}

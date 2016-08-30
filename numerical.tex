@@ -1,0 +1,371 @@
+\section{Numerical}
+
+\subsection{Choose}
+$\binom{n}{k}$
+\begin{verbatim}
+long long memo[SIZE][SIZE];//initialized to -1
+long long binom(int n,int k){
+   if(memo[n][k]!=-1)return memo[n][k];
+   if(n<k)return 0;
+   if(n==k)return 1;
+   if(k==0)return 1;
+   return memo[n][k]=binom(n-1,k)+binom(n-1,k-1);
+}
+\end{verbatim}
+
+\subsection{Módulo:}
+\begin{verbatim}
+int mod(int a, int n) {
+  return (a%n + n)%n;
+}
+\end{verbatim}
+
+\subsection{LCM / GCD}
+\begin{verbatim}
+int gcd(int a,int b){
+   if(!b)
+      return a;
+   else return gcd(b,a%b);
+}
+
+struct triple{
+   int gcd,x,y;
+   int triple(int g=0,int a=0,int b=0):
+                       gcd(g),x(a),y(b){}
+};
+
+triple ExtendedEuclid(int a,int b){
+   if(!b)
+      return triple(a,1,0);
+      
+   triple t=ExtendedEuclid(b,a%b);
+   return triple(t.gcd,t.y,t.x-(a/b)*t.y);
+}
+
+int LCM(int a,int b){
+   return a*b/gcd(a,b);
+}
+   
+\end{verbatim}
+
+
+\subsection{Base conversion}
+\begin{verbatim}
+void base(char *res, int num, int base){
+   char tmp[100];
+   int i, j;
+   for (i = 0; num; i++) {
+      tmp[i]="0123456789ABCDEFGHIJKLM"[num%base];
+      num /= base;
+   }
+   tmp[i] = 0;
+   for (i--, j = 0; i >= 0; i--, j++)
+      res[j] = tmp[i];
+   res[j] = 0;
+}
+\end{verbatim}
+
+\subsection{Horner's Rule}
+$$
+P(x)=\sum_{k=0}^{n}a_k x^k=a_0+x(a_1+x(a_2+\cdots+(a_{n-1}+x1_n)))
+$$
+\begin{verbatim}
+double Horner(double coef[],int degree,int x) {
+   double res = 0;
+   int i;
+   
+   for (i = degree; i >= 0; i--)
+      res = coef[i] + x * res;
+   return res;
+}
+\end{verbatim}
+
+\subsection{Big Mod}
+$(B^P)\%M$
+\begin{verbatim}
+long int bigmod(long long int B,
+         long long int P, long long int M) {
+   if (P == 0)
+      return 1;
+   else if(P & 1) {
+      long long int tmp = 
+             bigmod(B,(P - 1) >> 1, M) % M;
+	    tmp = (tmp * tmp * B) % M;
+	    return tmp;
+   }
+
+   else{
+      long long int tmp = bigmod(B, P >> 1, M) % M;
+	    return (tmp * tmp) % M;
+   }
+}
+\end{verbatim}
+
+\subsection{Matrix Multiplication}
+\begin{verbatim}
+void Matrix_Multiply(int A[N][P],
+                  int B[P][M],int N){
+   int C[N][M],i,j,k;
+   for(i=0;i<N;i++){
+      for(j=0;j<P;j++){
+         C[i][j]=0;
+         for(k=0;k<P;k++)
+            C[i][j]+=A[i][k]*B[k][j];
+      }
+   }
+}
+\end{verbatim}
+
+\subsection{Long Arithmetic}
+
+\textbf{Take care of leading zeroes.}
+
+\textbf{Addition:}
+\begin{verbatim}
+/* make sure num1 and num2 are
+   filled with '\0' after digits!! */
+void add(char *num1,char *num2,char *res){
+   int i,carry=0;
+   reverse(num1,num1+strlen(num1));
+   reverse(num2,num2+strlen(num2));
+   
+   for(i=0;num1[i] || num2[i];i++){
+      res[i]=num1[i]+num2[i]-'0'+carry;
+      if(!num1[i] || !num2[i])res[i]+='0';
+      if(res[i]>'9'){
+         carry=1;
+         res[i]-=10;
+      }else carry=0;
+   }
+   if(carry)res[i]='1';
+   reverse(res,res+strlen(res));
+}
+\end{verbatim}
+
+\textbf{Multiplication}
+\begin{verbatim}
+void mul(char *num1,char *num2,char *str){
+   int i,j,res[2*SIZE]={0},carry=0;
+   
+   reverse(num1,num1+strlen(num1));
+   reverse(num2,num2+strlen(num2));
+   for(i=0;num1[i];i++)
+      for(j=0;num2[j];j++)
+         res[i+j]+=(num1[i]-'0')*(num2[j]-'0');
+   for(i=2*SIZE-1;i>=0 && !res[i];i--);
+   
+   if(i<0)strcpy(str,"0");return;
+   for(j=0;i>=0;i--,j++){
+      str[j]=res[i]+carry;
+      carry=str[j]/10;
+      str[j]%=10;
+      str[j]+='0';
+   }
+   if(carry)str[j]=carry+'0';
+}
+\end{verbatim}
+
+\subsection{Infix para Postfix}
+\begin{verbatim}
+
+#define oper(a) ((a) == '+' || (a) == '-' \\
+	|| (a) == '*' || (a) == '/')
+
+// true if either:  !!
+// b is left associative and
+// its precedence is <= than a
+//
+// b is right associative and
+// its prec is < than a
+bool be_prec(char a, char b) {
+   int p[300];
+   p['+'] = p['-'] = 1;
+   p['*'] = p['/'] = 2;
+   return p[a] >= p[b];
+}
+
+string shunting_yard(string exp) {
+    int i = 0;
+    string res;
+    stack<char> s; //operators (1 char!)
+
+    while (i < exp.size()) {
+	// if it is a function token push it onto the stack
+
+	// If it is a func arg separator (e.g., a comma):
+	// Until the topmost elem of the stack is '('
+	// pop the elem from the stack and
+	// append it to res. If no '(' -> error
+	// do not pop '('
+
+	if (isdigit(exp[i]) || exp[i] == 'x') { 
+	    //number. add isalpha() for vars
+	    for (; i < exp.size() &&
+		    (isdigit(exp[i]) || exp[i] == 'x'); i++)
+		res.push_back(exp[i]);
+	    res.push_back(' ');
+	    i--; //there's a i++ down there
+	}
+	else if (exp[i] == '(') s.push('(');
+
+	else if (exp[i] == ')') {
+	    while (!s.empty() && s.top() != '(') {
+		res += (s.top() + string(" "));
+		s.pop();
+	    }
+	    if (s.top() != '(') ;//error
+	    else s.pop();
+	}
+	else if (oper(exp[i])) { //operator
+	    while (!s.empty() && oper(s.top()) &&
+		    be_prec(s.top(), exp[i])) {
+		res += (s.top() + string(" "));
+		s.pop();
+	    }
+	    s.push(exp[i]);
+	}
+	i++;
+    }
+    while (!s.empty()) {
+	if (s.top() == '(' || s.top() == ')') ;//error
+	res += (s.top() + string(" "));
+	s.pop();
+    }
+    if (*(res.end() - 1) == ' ') res.erase(res.end() - 1);
+    return res;
+}
+
+
+\end{verbatim}
+
+\subsection{Calculate Postfix expression}
+\begin{verbatim}
+// exp is in postfix
+double calc(string exp) {
+    stack<double> s;
+    istringstream iss(exp);
+    string op;
+
+    while (iss >> op) {
+        // ATTENTION TO THIS
+        if (op.size() == 1 && oper(op[0])) {
+            if (s.size() < 2) ;//error
+            double a = s.top(); s.pop();
+            double b  = s.top(); s.pop();
+            switch (op[0]) {
+                case '+': s.push(b + a); break;
+                case '-': s.push(b - a); break;
+                case '*': s.push(b * a); break;
+                case '/': s.push(b / a); break;
+            }
+        } else {
+            istringstream iss2(op);
+            double tmp;
+            iss2 >> tmp;
+            s.push(tmp);
+        }
+    }
+    return s.top();
+}
+\end{verbatim}
+
+\subsection{Postfix to Infix}
+\begin{verbatim}
+/*
+ * Pass a stack with the expression to rpn2infix.
+ * Ex: (bottom) 3 4 5 * + (top)
+ */
+string rpn2infix(stack<string> &s) {
+   string x = s.top();
+   s.pop();
+   if(isdigit(x[0])) return x;
+   else return string("(") +
+    rpn2infix(s) + x + rpn2infix(s) + string(")");
+}
+\end{verbatim}
+
+\subsection{Matrix Multiplication}
+$$
+C_{ij}=\sum_{k=1}^n a_{ik}.b_{kj}
+$$
+
+\begin{verbatim}
+void matrix_mul(int A[N][P],int B[P][M]) {
+   int C[N][M],i,j,k;
+   for (i=0;i<N;i++) {
+      for (j=0;j<P;j++) {
+         C[i][j]=0;
+         for (k=0;k<P;k++)
+            C[i][j]+=A[i][k]*B[k][j];
+      }
+   }
+}
+\end{verbatim}
+
+
+\subsection{Catalan Numbers}
+
+$$
+C_n = \frac{(2n)!}{(n+1)!n!}
+$$
+
+\begin{itemize}
+\item $C_n$ counts the number of expressions containing $n$ pairs of parentheses which are correctly matched
+\item $C_n$ is the number of different ways a convex polygon with $n + 2$ sides can be cut into triangles by connecting vertices with straight lines.
+\end{itemize}
+
+\subsection{Fibonnaci}
+\begin{verbatim}
+long fib(long n){
+   long matrix[2][2]={{1,1},{1,0}};
+   long res[2][2]={{1,1},{1,0}};
+   while(n){
+      if(n&1) /* se n e impar*/
+         matrix_mul(matrix,res,res);
+      matrix_mul(matrix,matrix,matrix);
+      n/=2;
+   }
+   return res[1][1];
+}
+\end{verbatim}
+
+{\huge Stuff}
+
+\begin{itemize}
+\item $(1+2+3+\cdot+n)^2=\big(\frac{n*(n+1)}{2}\big)^2=\frac{n^2*(n+1)^2}{4}$
+
+\item $1^2+2^2+3^3+\cdot+n^2=\frac{n*(n+1)*(2n+1)}{6}$
+
+\item $x$ is a power of two iff \begin{verbatim}(x & (x-1))==0\end{verbatim}.\\
+
+\item In a quadratic
+$$
+Ax^2+Bx+C=0
+$$the sum of the roots is $\frac{-B}{A}$ and the product of the roots is the constant term $C$.
+\item The division of 2 complex numbers $w$ and $z$ is $\frac{z}{w}=\frac{z. w^{-1}}{w. w^{-1}}$ where $z^{-1}$ is the complex conjugate of $z$. $(a+bi)^{-1}=(a-bi)$\\\\
+$(x+y)^n=\sum_{i=0}^{n}\binom{n}{i}x^{n-i} y^i$\\\\
+$\binom{n}{m} = \frac{n!}{m!(n-m)!}$\\\\
+$\binom{n}{0}+\binom{n}{1}+\binom{n}{2}+\cdots+\binom{n}{n}=2^n$\\\\
+$\binom{n}{0}-\binom{n}{1}+\binom{n}{2}-\cdots+(-1)^n\binom{n}{n}=0$\\\\
+$\binom{n}{k}=\binom{n-1}{k}+\binom{n-1}{k-1}$\\\\
+For positive integers $n$,$t$, the coefficient of ${x_1}^{n_1}{x_2}^{n_2}{x_3}^{n_3}\cdots{x_t}^{n_t}$ in the expansion of $(x_1+x_2+x_3+\cdots+x_t)^n$  is
+$$
+\binom{n}{n_1}\binom{n-n_1}{n_2}\cdots\binom{n-n_1-n_2-n_3-\cdots-n_{t-1}}{n_t}=
+$$
+$$
+\frac{n!}{n_1!n_2!n_3!\cdots n_t!}
+$$
+
+where each $n_i$ is an integer with $0\le n_i\le n$,for all $1\le i\le t$,and $n_1+n_2+n_3\cdots n_t=n$.\\
+
+\end{itemize}
+
+\subsection{Set Partitions}
+
+$B_n$ is the number of differente partitions of a set with $n$ elements.
+$B_0=1, B_1=1, B_2=2, B_3=5, B_4=15$
+
+$B_{n+1}=\sum_{k=0}^n{\binom{n}{k}B_k}$
+
+$S(n,k)$ is the number of ways to partition a set of $n$ elements in $k$ nonempty subsets.
+$S(n,k) = S(n-1,k-1)+kS(n-1,k)$

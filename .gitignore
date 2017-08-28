@@ -1,0 +1,8 @@
+nth_permutation
+*.o
+*.out
+core
+*.aux
+*.log
+*.pdf
+*.toc

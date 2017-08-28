@@ -40,7 +40,7 @@ int main() {
         fact *= i;
     }
     for (uint64_t i = 0; i < fact; ++i) {
-        std::cout << i << " " << nth_permutation2(i, s) << std::endl;
+        std::cout << i << " " << nth_permutation(i, s) << std::endl;
     }
     return 0;
 }

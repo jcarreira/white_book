@@ -1,7 +1,6 @@
-MAIN = note.tex
+all: nth_permutation
 
-all:
-	pdflatex $(MAIN)
+CPPFLAGS=-Wall -Werror -ansi -ggdb -std=c++11 
 
-clean:
-	rm *.log *.aux *.pdf *.toc -rf
+nth_permutation: nth_permutation.cpp
+	g++ $(CPPFLAGS) nth_permutation.cpp -o nth_permutation

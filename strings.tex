@@ -2,36 +2,40 @@
 
 \subsection{KMP}
 \begin{verbatim}
-int* compute_prefix(string p) {
-    int m=p.length();
-    int *pi=(int*)malloc(sizeof(int)*m);
-    pi[0]=0;
-    int k=0;
-    for(int q=1;q<m;q++) {
-        while(k>0&&p[k]!=p[q])
-            k=pi[k-1];
-        if(p[k]==p[q])
-            k++;
-        pi[q]=k;
-    }
-    return pi;
+std::vector<int> compute_prefix(std::string p) {
+   int m = p.size();
+
+   std::vector<int> pi(m);
+   int k = 0;
+
+   pi[0] = 0;
+   for (int q = 1; q < m; q++) {
+      while(k > 0 && p[k] != p[q])
+         k = pi[k - 1];
+      if (p[k] == p[q])
+         k++;
+      pi[q] = k;
+   }
+   return pi;
 }
 
-void kmp_match(string s,string p) {
-    int *pi=compute_prefix(p);
-    int q=0;
-    int n=s.length();
-    int m=p.length();
+void kmp_match(std::string s, std::string p) {
+   std::vector<int> pi = compute_prefix(p);
+   int q = 0;
+   int n = s.size();
+   int m = p.size();
 
-    for(int i=0;i<n;i++) {
-        while(q>0&&p[q]!=s[i])
-            q=pi[q-1];
-        if(p[q]==s[i])
-            q++;
-        if(q==m) {
-            printf("Match pos %d\n",i-m+1);
-        }
-    }
+   for(int i = 0; i < n; i++) {
+      while (q > 0 && p[q] != s[i])
+         q = pi[q - 1];
+      if (p[q] == s[i])
+         q++;
+      if (q == m) {
+         std::cout << "Match pos "
+            << (i - m + 1)
+            << std::endl;
+      }
+   }
 }
 \end{verbatim}
 
@@ -43,26 +47,26 @@ int main() {
    scanf("%d %d",&N,&Q);
 
    for (i=0;i<N;i++)
-	    scanf("%d",&n[i]);
+            scanf("%d",&n[i]);
 
    for (i=0;i<N;i++)
-	    m[i][0]=M[i][0]=n[i];
+            m[i][0]=M[i][0]=n[i];
 
    for (i=1;(1<<i)<=N;i++) {
-	    for (j=0;j+(1<<i)-1<N;j++) {
-	       m[j][i]=min(m[j][i-1],m[j+(1<<(i-1))][i-1]);
-	       M[j][i]=max(M[j][i-1],M[j+(1<<(i-1))][i-1]);
-	    }
+            for (j=0;j+(1<<i)-1<N;j++) {
+               m[j][i]=min(m[j][i-1],m[j+(1<<(i-1))][i-1]);
+               M[j][i]=max(M[j][i-1],M[j+(1<<(i-1))][i-1]);
+            }
    }
 
    for (k=0;k<Q;k++) {
-	    scanf("%d %d",&i,&j);
-	    i--;j--;
-	    int t,p;
-	    t=(int)(log(j-i+1)/log(2));
-	    p=1<<t;
-	    printf("%d\n",max(M[i][t],M[j-p+1][t])
-	    - min(m[i][t], m[j - p + 1][t]));
+            scanf("%d %d",&i,&j);
+            i--;j--;
+            int t,p;
+            t=(int)(log(j-i+1)/log(2));
+            p=1<<t;
+            printf("%d\n",max(M[i][t],M[j-p+1][t])
+            - min(m[i][t], m[j - p + 1][t]));
    }
    return 0;
 }
@@ -92,7 +96,7 @@ std::string nth_permutation(uint64_t k, const std::string &s) {
         // compute how many permutations on the rest
         // of the string s[j + 1 .. s.size() - 1]
         factorial /= s.size() - j;
-       
+
         // store character 
         uint64_t l = k / factorial;
         res += s_copy[l];
@@ -104,5 +108,5 @@ std::string nth_permutation(uint64_t k, const std::string &s) {
         k = k % factorial;
     }
     return res;
-}
+ }
 \end{verbatim}
